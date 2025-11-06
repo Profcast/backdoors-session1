@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Demo Creds (local)</title>
+  <style>
+    body{font-family:system-ui;margin:30px}
+    table{border-collapse:collapse;width:100%;max-width:900px}
+    th,td{border:1px solid #ddd;padding:8px;text-align:left}
+    th{background:#f6f6f6}
+    button{margin-top:12px;padding:8px 10px}
+    .note{font-size:13px;color:#555}
+  </style>
+</head>
+<body>
+  <h2>Local demo credential store (admin)</h2>
+  <p class="note">Only shows entries saved in this browser under this origin. No remote server is involved.</p>
+  <div id="container">Loading…</div>
+
+  <div style="margin-top:12px">
+    <button id="preseedBtn">Preseed demo data</button>
+    <button id="clearBtn">Clear stored entries</button>
+  </div>
+
+  <script>
+    const key = 'demo_game_creds';
+
+    function render(){
+      const raw = localStorage.getItem(key);
+      const list = raw ? JSON.parse(raw) : [];
+      if (list.length === 0){
+        document.getElementById('container').innerHTML = '<p><em>No stored demo entries.</em></p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>#</th><th>Timestamp</th><th>Username</th><th>Password</th></tr></thead><tbody>';
+      list.forEach((r,i)=> {
+        html += `<tr><td>${i+1}</td><td>${r.ts}</td><td>${escapeHtml(r.username)}</td><td>${escapeHtml(r.password)}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('container').innerHTML = html;
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; });
+    }
+
+    document.getElementById('clearBtn').addEventListener('click', function(){
+      if(!confirm('Clear all local demo entries?')) return;
+      localStorage.removeItem(key);
+      render();
+    });
+
+    document.getElementById('preseedBtn').addEventListener('click', function(){
+      const sample = [
+        {username:'player1', password:'hunter2', ts:new Date().toISOString()},
+        {username:'alice.demo', password:'password123', ts:new Date().toISOString()}
+      ];
+      localStorage.setItem(key, JSON.stringify(sample));
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

